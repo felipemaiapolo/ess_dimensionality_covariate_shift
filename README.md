@@ -14,3 +14,4 @@ This directory contains the following notebooks and folders:
     - w_models.py: models to estimate density ratio;
     - sklearn_models.py: some classes containing sklearn models for our use;
     - select_vars_gmm.py: GMM for feature selection;
+8) Data (folder): folder containing the used data
