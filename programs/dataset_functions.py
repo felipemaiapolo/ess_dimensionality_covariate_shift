@@ -23,25 +23,14 @@ def download_dataset(name):
     ###########
     
     #.data
-    url="https://raw.githubusercontent.com/felipemaiapolo/master_thesis/master/open_datasets/"+name+".data"
-    s=requests.get(url).content
-    d1=pd.read_csv(io.StringIO(s.decode('utf-8')), header=None, sep=sep)
+    #url="https://raw.githubusercontent.com/felipemaiapolo/master_thesis/master/open_datasets/"+name+".data"
+    #s=requests.get(url).content
+    d1=pd.read_csv("data/"+name+".data", header=None, sep=sep)
     #.test
-    url="https://raw.githubusercontent.com/felipemaiapolo/master_thesis/master/open_datasets/"+name+".test"
-    s=requests.get(url).content
-    d2=pd.read_csv(io.StringIO(s.decode('utf-8')), header=None, sep=sep)
-
-    #Output
-    if d2.iloc[0,0]=='404: Not Found': 
-        print("- ***",name,"*** dataset shape=",np.shape(d1)) #Printing shape of dataset
-        
-        #### exception
-        if name in ['bank32nh','bank8FM','puma8NH']:d1=d1.iloc[:,:-1]
-        else: pass
-        ####
-        
-        return d1.dropna()
-    else: 
+    #url="https://raw.githubusercontent.com/felipemaiapolo/master_thesis/master/open_datasets/"+name+".test"
+    #s=requests.get(url).content
+    try:
+        d2=pd.read_csv("data/"+name+".test", header=None, sep=sep)
         d1=d1.append(d2)
         print("- ***",name,"*** dataset shape=",np.shape(d1)) #Printing shape of dataset
         
@@ -51,6 +40,14 @@ def download_dataset(name):
         ####
         
         return d1.dropna()
+    except:
+        print("- ***",name,"*** dataset shape=",np.shape(d1)) #Printing shape of dataset
+        
+        #### exception
+        if name in ['bank32nh','bank8FM','puma8NH']:d1=d1.iloc[:,:-1]
+        else: pass
+        return d1.dropna()
+    
     
 def get_X_y(pd_df,scale=True):
     if scale: 
@@ -192,7 +189,7 @@ def aval_class(b, X, y):
     ### Outputs
     error_ratio=class_error(y_test_test,y_pred2)/class_error(y_test_test,y_pred1)
     
-    ess_n=np.round(np.sum(w_s)**2/np.sum(w_s**2),2) #np.round(np.sum(w_s)**2/np.sum(w_s**2),2)
+    ess_n=np.round(np.sum(w_s)**2/np.sum(w_s**2),2) 
     ess_perc=ess_n/np.sum(s_train)
 
     #print(np.mean(w_s))

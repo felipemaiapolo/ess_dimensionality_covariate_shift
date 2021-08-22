@@ -22,73 +22,9 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.cluster import SpectralClustering
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.neighbors import KernelDensity
-from lightgbm import LGBMClassifier
 from sklearn.metrics import log_loss
-from skopt import gp_minimize
-from skopt import dummy_minimize
 from programs.functions import *
 
-
-class LSPC:
-    def __init__(self, B, sigma, rho):
-        self.B=B
-        self.sigma=sigma
-        self.rho=rho
-        self.centers=None
-        self.theta=None
-    
-    def fit(self,X,y):
-        index=[random.choice(range(np.shape(X)[0])) for _ in range(self.B)]
-        self.centers=X[index]
-        pi=np.array(pd.get_dummies(y))
-        pi=pi.reshape((np.shape(X)[0],-1))
-        PHI=rbf_kernel(X, self.centers, 1/(2*self.sigma**2))
-        self.theta=np.linalg.inv(PHI.T@PHI+self.rho*np.identity(self.B))@PHI.T@pi
-        
-    def predict_proba(self,X):
-        PHI=rbf_kernel(X, self.centers, 1/(2*self.sigma**2))           
-        y_proba=relu(PHI@self.theta)/np.sum(relu(PHI@self.theta), axis=1).reshape((-1,1))
-        #y_proba=softplus(PHI@self.theta)/np.sum(softplus(PHI@self.theta), axis=1).reshape((-1,1))
-        return y_proba
-    
-    def get_auc(self,X,y):
-        y_proba=self.predict_proba(X)
-        return auc(y.reshape((-1,1)),y_proba[:,1].reshape((-1,1)))
-
-
-class LSPC_w:
-    def __init__(self,B):
-        self.model=None
-        self.B=B
-    
-    def cv(self,X,y):
-        
-        Xw_train,Xw_test,yw_train,yw_test=train_test_split(X,y, test_size=0.3, random_state=1)
-
-        def treinar_modelo(params):
-            sigma = params[0]
-            rho = params[1]
-            model = LSPC(B=self.B, sigma=sigma, rho=rho)
-            model.fit(Xw_train,yw_train)
-            return -model.get_auc(Xw_test,yw_test)
-        
-        space = [(.01, 25.), #sigma
-                 (.01, 25.)] #rho
-        
-        resultados_gp = gp_minimize(treinar_modelo, space, random_state=1, verbose=0, n_calls=50, n_random_starts=25)
-        return resultados_gp.x
-    
-    def fit(self,X0,X1):
-        X=np.vstack((X0, X1))
-        y=np.hstack((np.zeros(np.shape(X0)[0]),np.ones(np.shape(X1)[0])))
-        pars=self.cv(X,y)
-        model=LSPC(B=self.B, sigma=pars[0], rho=pars[1])
-        model.fit(X,y)
-        self.model=model
-    
-    def predict(self, X):
-        return 1/(self.model.predict_proba(X)[:,1])
-    
 ############################################################
 
 #Definindo função
